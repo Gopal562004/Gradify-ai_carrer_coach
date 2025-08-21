@@ -301,6 +301,7 @@ const ResumeForm = () => {
     certifications: "",
   });
 
+  const [loading, setLoading] = useState(false);  
   const handleChange = (e, index, key, section) => {
     if (section) {
       const updated = [...formData[section]];
@@ -321,7 +322,7 @@ const ResumeForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     const role = formData.experience[0]?.title || "Software Developer";
     const experienceText = formData.experience
       .map(
@@ -336,9 +337,8 @@ const ResumeForm = () => {
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
-
-    toast.promise(
-      generateResumeFromInput({
+      try{
+    await toast.promise(generateResumeFromInput({
         role,
         skills: skillsArray,
         experience: experienceText,
@@ -350,6 +350,10 @@ const ResumeForm = () => {
         error: "Failed to generate resume",
       }
     );
+  }
+  finally {
+    setLoading(false);
+  }
   };
 
   return (
@@ -517,9 +521,40 @@ const ResumeForm = () => {
           <div className="text-center">
             <button
               type="submit"
-              className="bg-white text-black px-8 py-3 rounded-lg font-semibold shadow-lg transition-all duration-300"
+              disabled={loading} // ✅ disable while loading
+              className={`px-8 py-3 rounded-lg font-semibold shadow-lg transition-all duration-300 ${
+                loading
+                  ? "bg-gray-600 text-white cursor-not-allowed"
+                  : "bg-white text-black hover:bg-gray-200"
+              }`}
             >
-              🚀 Generate Resume
+              {loading ? (
+                <span className="flex items-center justify-center space-x-2">
+                  <svg
+                    className="animate-spin h-5 w-5 text-black"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4l3-3-3-3v4a12 12 0 00-12 12h4z"
+                    />
+                  </svg>
+                  <span>Generating...</span>
+                </span>
+              ) : (
+                "🚀 Generate Resume"
+              )}
             </button>
           </div>
         </form>
